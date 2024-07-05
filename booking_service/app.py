@@ -42,7 +42,7 @@ def checkoutBooking():
      1. Que no exista un numero mayor de bookings que contengan el vuelo con id especificado,
     '''
 
-@app.route('/bookings', methods=['POST'])
+@app.route('/api/v1/bookings', methods=['POST'])
 @cross_origin()
 def crear_reserva():
     data = request.get_json()
@@ -82,7 +82,7 @@ def crear_reserva():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/bookings', methods=['GET'])
+@app.route('/api/v1/bookings', methods=['GET'])
 @cross_origin()
 def obtener_bookings():
     try:
@@ -96,7 +96,7 @@ def obtener_bookings():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/bookings/<int:id>', methods=['GET'])
+@app.route('/api/v1/bookings/<int:id>', methods=['GET'])
 @cross_origin()
 def obtener_reserva(id):
     try:
@@ -110,7 +110,7 @@ def obtener_reserva(id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/bookings/<int:id>', methods=['PUT'])
+@app.route('/api/v1/bookings/<int:id>', methods=['PUT'])
 @cross_origin()
 def modificar_reserva(id):
     data = request.get_json()
@@ -129,8 +129,8 @@ def modificar_reserva(id):
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute(
-            'UPDATE bookings SET user_id = %s, flight_start_id = %s, flight_end_id = %s, client_id = %s, hotel_id = %s, start_date = %s, end_date = %s, payments = %s, linked_bookings = %s, status = %s WHERE id = %s RETURNING *',
-            (user_id, flight_start_id, flight_end_id, client_id, hotel_id, start_date, end_date, json.dumps(payments), json.dumps(linked_bookings), status, id)
+            'UPDATE bookings SET user_id = %s, flight_start_id = %s, flight_end_id = %s, hotel_id = %s, start_date = %s, end_date = %s, payments = %s, linked_bookings = %s, status = %s WHERE id = %s RETURNING *',
+            (user_id, flight_start_id, flight_end_id, hotel_id, start_date, end_date, json.dumps(payments), json.dumps(linked_bookings), status, id)
         )
         updated_reserva = cursor.fetchone()
         conn.commit()
@@ -144,7 +144,7 @@ def modificar_reserva(id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/bookings/<int:id>', methods=['DELETE'])
+@app.route('/api/v1/bookings/<int:id>', methods=['DELETE'])
 @cross_origin()
 def borrar_reserva(id):
     try:
@@ -163,8 +163,8 @@ def borrar_reserva(id):
 
             # Insertar la reserva cancelada en bookings_borradas
             cursor.execute(
-                'INSERT INTO bookings_borradas (user_id, flight_start_id, flight_end_id, client_id, hotel_id, start_date, end_date, payments, linked_bookings, status, deleted_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())',
-                (reserva['user_id'], reserva['flight_start_id'], reserva['flight_end_id'], reserva['client_id'], reserva['hotel_id'], reserva['start_date'], reserva['end_date'], reserva['payments'], reserva['linked_bookings'], 'cancelled')
+                'INSERT INTO bookings_borradas (user_id, flight_start_id, flight_end_id, hotel_id, start_date, end_date, payments, linked_bookings, status, deleted_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())',
+                (reserva['user_id'], reserva['flight_start_id'], reserva['flight_end_id'], reserva['hotel_id'], reserva['start_date'], reserva['end_date'], reserva['payments'], reserva['linked_bookings'], 'cancelled')
             )
             
             # Eliminar la reserva
