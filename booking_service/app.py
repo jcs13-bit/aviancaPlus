@@ -31,6 +31,13 @@ def get_db_connection():
     )
     return conn
 
+@app.route('/checkout', methods=['POST'])
+def checkoutBooking():
+    '''
+     En este  punto, llamar al servicio de disponibilidad, en donde se verifica:
+     1. Que no exista un numero mayor de bookings que contengan el vuelo con id especificado,
+    '''
+
 @app.route('/bookings', methods=['POST'])
 def crear_reserva():
     data = request.get_json()

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: availability-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: availability-app
+  template:
+    metadata:
+      labels:
+        app: availability-app
+    spec:
+      containers:
+        - name: availability-app
+          image: docker.io/jose0613/availability_service:v1.0.1
+          ports:
+            - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: availability-service
+spec:
+  type: NodePort
+  selector:
+    app: availability-app
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
