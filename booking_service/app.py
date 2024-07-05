@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import os
 import logging
 import json
+from flask_cors import CORS, cross_origin
 
 # Configuración de logging
 logging.basicConfig(filename='bookings.log', level=logging.INFO,
@@ -14,6 +15,8 @@ logging.basicConfig(filename='bookings.log', level=logging.INFO,
 load_dotenv()
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 DB_HOST = os.getenv('DB_HOST', 'postgres-service')
 DB_NAME = os.getenv('DB_NAME', 'bookings')
@@ -32,6 +35,7 @@ def get_db_connection():
     return conn
 
 @app.route('/checkout', methods=['POST'])
+@cross_origin()
 def checkoutBooking():
     '''
      En este  punto, llamar al servicio de disponibilidad, en donde se verifica:
@@ -39,6 +43,7 @@ def checkoutBooking():
     '''
 
 @app.route('/bookings', methods=['POST'])
+@cross_origin()
 def crear_reserva():
     data = request.get_json()
     if data is None:
@@ -78,6 +83,7 @@ def crear_reserva():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/bookings', methods=['GET'])
+@cross_origin()
 def obtener_bookings():
     try:
         conn = get_db_connection()
@@ -91,6 +97,7 @@ def obtener_bookings():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/bookings/<int:id>', methods=['GET'])
+@cross_origin()
 def obtener_reserva(id):
     try:
         conn = get_db_connection()
@@ -104,6 +111,7 @@ def obtener_reserva(id):
         return jsonify({'error': str(e)}), 500
 
 @app.route('/bookings/<int:id>', methods=['PUT'])
+@cross_origin()
 def modificar_reserva(id):
     data = request.get_json()
     user_id = data.get('user_id')
@@ -137,6 +145,7 @@ def modificar_reserva(id):
         return jsonify({'error': str(e)}), 500
 
 @app.route('/bookings/<int:id>', methods=['DELETE'])
+@cross_origin()
 def borrar_reserva(id):
     try:
         conn = get_db_connection()
