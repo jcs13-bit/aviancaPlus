@@ -11,6 +11,10 @@
     hotels:
     CREATE TABLE hotels (id SERIAL PRIMARY KEY, name VARCHAR(30), address VARCHAR(30), capacity INT NOT NULL);
 
+
+    payments:
+    CREATE TABLE payments (id SERIAL PRIMARY KEY,booking_id INT NOT NULL,payment_date TIMESTAMP NOT NULL,amount DECIMAL(10, 2) NOT NULL,payment_method VARCHAR(50) NOT NULL,status VARCHAR(20)NOT NULL,transaction_id VARCHAR(50));
+
 kubectl exec --stdin --tty bookings-service-deployment-78c69c698f-ktb2w -- /bin/bash
 
 \c nombre_de_la_base_de_datos

@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hotels-service-deployment
+  name: payments-service-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hotels-service-app
+      app: payments-service-app
   template:
     metadata:
       labels:
-        app: hotels-service-app
+        app: payments-service-app
     spec:
       containers:
-        - name: hotels-service-app
-          image: docker.io/jose0613/hotels_service:v1.0.0
+        - name: payments-service-app
+          image: docker.io/jose0613/payments_service:v1.0.0
           ports:
             - containerPort: 5000
           env:
             - name: DB_HOST
               value: "postgres-service"
             - name: DB_NAME
-              value: "hotels"
+              value: "payments"
             - name: DB_USER
               value: "postgresuser"
             - name: DB_PASSWORD
@@ -33,13 +33,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: hotels-service
+  name: payments-service
 spec:
   type: NodePort
   selector:
-    app: hotels-service-app
+    app: payments-service-app
   ports:
     - protocol: TCP
       port: 5000
       targetPort: 5000
-      nodePort: 30003
+      nodePort: 30004

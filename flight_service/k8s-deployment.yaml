@@ -13,7 +13,7 @@ spec:
         app: flights-service-app
     spec:
       containers:
-        - name: bookings-service-app
+        - name: flights-service-app
           image: docker.io/jose0613/flights_service:v1.0.1
           ports:
             - containerPort: 5000
