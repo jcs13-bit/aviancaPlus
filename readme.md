@@ -1,6 +1,19 @@
+    bookings:
     CREATE TABLE bookings (id SERIAL PRIMARY KEY,user_id INT NOT NULL,hotel_id INT,vuelo_id INT,flight_start_id INT,flight_end_id INT,start_date TIMESTAMP,end_date TIMESTAMP,status VARCHAR(20) NOT NULL,linked_bookings JSON,payments JSON);
 
+
+
+
+    flights:
+    CREATE TABLE flights (id SERIAL PRIMARY KEY, start_date TIMESTAMP,end_date TIMESTAMP, start_address  VARCHAR(30),end_address VARCHAR(30), capacity INT NOT NULL);
+
+
+    hotels:
+    CREATE TABLE hotels (id SERIAL PRIMARY KEY, name VARCHAR(30), address VARCHAR(30), capacity INT NOT NULL);
+
 kubectl exec --stdin --tty bookings-service-deployment-78c69c698f-ktb2w -- /bin/bash
+
+\c nombre_de_la_base_de_datos
 
 Para buildear la imagen:
 
