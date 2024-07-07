@@ -51,12 +51,12 @@ def crear_reserva():
     user_id = data['user_id']
     
     logging.info(f"Reserva creada: {user_id}")
-    flight_start_id = data['flight_start_id']
-    flight_end_id = data['flight_end_id']
-    hotel_id = data['hotel_id']
-    start_date = data['start_date']
-    end_date = data['end_date']
-    payments = data.get('payments', [])
+    flight_start_id = data['flight_start_id']  if 'flight_start_id' in data else None
+    flight_end_id = data['flight_end_id']  if 'flight_end_id' in data else None
+    hotel_id = data['hotel_id']  if 'hotel_id' in data else None
+    start_date = data['start_date']  if 'start_date' in data else None
+    end_date = data['end_date']  if 'end_date' in data else None
+    payments = data.get('payments', [])  
     linked_bookings = data.get('linked_bookings', [])
     logging.info(f"Reserva creada: {payments}")
     print(linked_bookings)
@@ -86,12 +86,7 @@ def crear_reserva():
 @cross_origin()
 def obtener_bookings():
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute('SELECT * FROM bookings  ')
-        bookings = cursor.fetchall()
-        cursor.close()
-        conn.close()
+        bookings = getBookingsArray()  
         return jsonify(bookings), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -154,31 +149,100 @@ def borrar_reserva(id):
         # Obtener la reserva actual
         cursor.execute('SELECT * FROM bookings WHERE id = %s', (id,))
         reserva = cursor.fetchone()
-
-        if reserva:
-            # Si hay relación entre hotel y vuelo, cancela ambos
-            if reserva['linked_bookings']:
-                for linked_booking_id in reserva['linked_bookings']:
-                    cursor.execute('UPDATE bookings SET status = %s WHERE id = %s', ('cancelled', linked_booking_id))
-
-            # Insertar la reserva cancelada en bookings_borradas
-            cursor.execute(
-                'INSERT INTO bookings_borradas (user_id, flight_start_id, flight_end_id, hotel_id, start_date, end_date, payments, linked_bookings, status, deleted_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())',
-                (reserva['user_id'], reserva['flight_start_id'], reserva['flight_end_id'], reserva['hotel_id'], reserva['start_date'], reserva['end_date'], reserva['payments'], reserva['linked_bookings'], 'cancelled')
-            )
-            
-            # Eliminar la reserva
-            cursor.execute('DELETE FROM bookings WHERE id = %s RETURNING *', (id,))
-            conn.commit()
-
-            # Log de borrado de reserva
-            logging.info(f"Reserva borrada: {reserva}")
-
         cursor.close()
         conn.close()
+
+        if reserva:
+            logging.info("Going into deleteBookingsRecursive from borrar_reserva")
+            deleteBookingsRecursive(reserva)
+        logging.info(f"Returning to borrar_reserva")
+        
         return jsonify(reserva), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error in borrar_reserva': str(e)}), 500
+
+def deleteBookingsRecursive(booking):
+    logging.info(f"Deleting booking recursive: {booking['id']}")
+    parentBookings= getParentBookings(booking['id'])
+    if parentBookings:
+       for parentBooking in parentBookings:
+           return deleteBookingsRecursive(parentBooking)
+    if not parentBookings:
+     
+        deletedBooking = deleteIndividualBooking(booking['id'])
+        linked_bookings = booking["linked_bookings"] if isinstance(booking["linked_bookings"], list) else json.loads(booking["linked_bookings"])
+        logging.info(f"reserve borrada y volvio al recursive delete with id {deletedBooking['id']}")
+        childBookings = getBookingsById(linked_bookings)
+        logging.info(f"Child bookings for booking with id: {booking['id'], childBookings}")
+        if childBookings:
+            for childBooking in childBookings:
+                logging.info(f"Deleting child with id {childBooking['id']}")
+                return deleteBookingsRecursive(childBooking)
+        if not childBookings:
+            logging.info(f"no childs, returning deleted booking")
+            return deletedBooking
+           
+
+def getParentBookings(booking_id):
+
+    bookings = getBookingsArray()
+    filtered_bookings = [booking for booking in bookings if booking_id in booking['linked_bookings']]
+
+    return filtered_bookings
+
+def getBookingsArray():
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute('SELECT * FROM bookings  ')
+        bookings = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return bookings
+
+    
+def getBookingsById(ids):
+    allBookings = getBookingsArray()
+    logging.info(f"getting bookings with ids {ids}")
+    bookings = [booking for booking in allBookings if booking['id'] in ids]  
+    return bookings 
+
+
+def deleteIndividualBooking(id):
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    
+    # Obtener la reserva actual
+    cursor.execute('SELECT * FROM bookings WHERE id = %s', (id,))
+    reserva = cursor.fetchone()
+    logging.info(f"Reserva a borrar: {id}")
+
+    if reserva:
+        # Verificar y convertir los campos JSON a cadenas si es necesario
+        payments = reserva["payments"] if isinstance(reserva["payments"], str) else json.dumps(reserva["payments"])
+        linked_bookings = reserva["linked_bookings"] if isinstance(reserva["linked_bookings"], str) else json.dumps(reserva["linked_bookings"])
+
+        # Insertar la reserva cancelada en bookings_borradas
+        cursor.execute(
+            'INSERT INTO bookings_borradas (user_id, flight_start_id, flight_end_id, hotel_id, start_date, end_date, payments, linked_bookings, status, deleted_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())',
+            (reserva['user_id'], reserva['flight_start_id'], reserva['flight_end_id'], reserva['hotel_id'], reserva['start_date'], reserva['end_date'], payments, linked_bookings, 'cancelled')
+        )
+        # Eliminar la reserva
+        cursor.execute('DELETE FROM bookings WHERE id = %s RETURNING *', (id,))
+        conn.commit()
+
+        # Log de borrado de reserva
+        logging.info(f"Reserva borrada: {reserva}")
+
+    cursor.close()
+    conn.close()
+    return reserva
+    
+
+
+
+
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000,debug=True)

@@ -15,6 +15,24 @@
     payments:
     CREATE TABLE payments (id SERIAL PRIMARY KEY,booking_id INT NOT NULL,payment_date TIMESTAMP NOT NULL,amount DECIMAL(10, 2) NOT NULL,payment_method VARCHAR(50) NOT NULL,status VARCHAR(20)NOT NULL,transaction_id VARCHAR(50));
 
+    delete_bookings:
+    CREATE TABLE bookings_borradas (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    flight_start_id INT,
+    flight_end_id INT,
+    hotel_id INT,
+    start_date TIMESTAMP,
+    end_date TIMESTAMP,
+    payments JSON,
+    linked_bookings JSON,
+    status VARCHAR(20) NOT NULL,
+    deleted_at TIMESTAMP NOT NULL DEFAULT NOW()
+
+);
+
+kubectl exec -it postgres-deployment-7f8c99fdf-rmfvq -- /bin/bash
+
 kubectl exec --stdin --tty bookings-service-deployment-78c69c698f-ktb2w -- /bin/bash
 
 \c nombre_de_la_base_de_datos
@@ -64,3 +82,36 @@ todo list
 crear endpoint de getBookingsByuserId
 revisar como borrar las reservas
 crear una función recursiva para borrar las reservas
+
+CHECKOUT SERVICE
+
+if flight_start_id or flight_end_id or (hotel_id && start_date && end_date){
+//codigo para construir el query string;
+const bookingRequestBody = {
+user_id,
+bookings,
+payments
+}
+
+    tengo la respuesta del availability svc
+
+    if(flight_start_id){
+        //checkear en el availability que si este dispo
+        flightStartAvailable = availabilityData["isFlighStartAvailable"]
+        if not flightStartAvailable:
+            return error 404 not available
+
+        bookingRequest["flight_start_id"] = flight_start_id
+    }
+
+    //lo mismo para el hotel
+    //y para el vuelo de venida
+
+
+    //al final, quedamos con el happy path de que lo que buscamos si esta disponible
+
+    bookingRequest =  requests.post.url etc
+
+    retun 201 creado
+
+} else return bad request;

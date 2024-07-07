@@ -52,7 +52,7 @@ def create_flight():
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute(
-            'INSERT INTO  flights (start_date,end_date,start_address,end_address,capacity) VALUES (%s, %s, %s,%s,%s,%s) RETURNING *',
+            'INSERT INTO  flights (start_date,end_date,start_address,end_address,capacity) VALUES (%s, %s, %s,%s,%s) RETURNING *',
             (start_date,end_date,start_address,end_address,capacity))
         new_flight = cursor.fetchone()
         conn.commit()

@@ -1,31 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: availability-deployment
+  name: checkout-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: availability-app
+      app: checkout-app
   template:
     metadata:
       labels:
-        app: availability-app
+        app: checkout-app
     spec:
       containers:
-        - name: availability-app
-          image: docker.io/jose0613/availability_service:v1.0.18
+        - name: checkout-app
+          image: docker.io/jose0613/checkout_service:v1.0.27
           ports:
             - containerPort: 5000
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: availability-service
+  name: checkout-service
 spec:
   type: NodePort
   selector:
-    app: availability-app
+    app: checkout-app
   ports:
     - protocol: TCP
       port: 5000

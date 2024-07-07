@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: flights-service-app
-          image: docker.io/jose0613/flights_service:v1.0.1
+          image: docker.io/jose0613/flights_service:v1.0.2
           ports:
             - containerPort: 5000
           env:
