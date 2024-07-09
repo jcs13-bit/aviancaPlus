@@ -94,6 +94,63 @@ def get_flight(id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000,debug=True)
+@app.route('/api/v1/flight/<int:id>', methods=['PUT'])
+@cross_origin()
+def update_flight(id):
+        data = request.get_json()
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        start_address = data.get('start_address')
+        end_address = data.get('end_address')
+        capacity = data.get('capacity')
 
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute(
+                'UPDATE flights SET start_date = %s, end_date = %s, start_address = %s, end_address = %s, capacity = %s WHERE id = %s RETURNING *',
+                (start_date, end_date, start_address, end_address, capacity, id)
+            )
+            updated_flight = cursor.fetchone()
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            # Log de actualización de vuelo
+            logging.info(f"flight actualizado: {updated_flight}")
+
+            return jsonify(updated_flight), 200
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+@app.route('/api/v1/flight/<int:id>', methods=['DELETE'])
+@cross_origin()
+def delete_flight(id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+            # Obtener el vuelo actual
+        cursor.execute('SELECT * FROM flights WHERE id = %s', (id,))
+        flight = cursor.fetchone()
+
+        if flight:
+            cursor.execute('DELETE FROM flights WHERE id = %s RETURNING *', (id,))
+            deleted_flight = cursor.fetchone()
+            conn.commit()
+
+                # Log de borrado de vuelo
+            logging.info(f"flight borrado: {deleted_flight}")
+
+            cursor.close()
+            conn.close()
+            return jsonify(deleted_flight), 200
+        else:
+            cursor.close()
+            conn.close()
+            return jsonify({'error': 'Vuelo no encontrado'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500        
+    
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)

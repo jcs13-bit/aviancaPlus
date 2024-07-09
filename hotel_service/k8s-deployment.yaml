@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: hotels-service-app
-          image: docker.io/jose0613/hotels_service:v1.0.0
+          image: docker.io/jose0613/hotels_service:v1.0.2
           ports:
             - containerPort: 5000
           env:
